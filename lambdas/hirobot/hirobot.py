@@ -29,7 +29,10 @@ def post_github_comment(repo: str, issue_number: int, message: str, token: str):
 
 
 def call_bedrock(prompt: str) -> str:
-    client = boto3.client("bedrock-runtime", region_name=os.environ.get("AWS_REGION", "us-east-1"))
+    client = boto3.client(
+        "bedrock-runtime",
+        region_name=os.environ.get("AWS_REGION", "us-east-1")
+    )
     response = client.converse(
         modelId="amazon.nova-micro-v1:0",
         messages=[{
