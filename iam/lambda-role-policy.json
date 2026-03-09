@@ -1,0 +1,36 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "BedrockInvokeNovaMicro",
+      "Effect": "Allow",
+      "Action": "bedrock:InvokeModel",
+      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0"
+    },
+    {
+      "Sid": "BedrockConverse",
+      "Effect": "Allow",
+      "Action": "bedrock:Converse",
+      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0"
+    },
+    {
+      "Sid": "SecretsManagerGetSecrets",
+      "Effect": "Allow",
+      "Action": "secretsmanager:GetSecretValue",
+      "Resource": [
+        "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:hirobot/github-token*",
+        "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:hirobot/github-webhook-secret*"
+      ]
+    },
+    {
+      "Sid": "CloudWatchLogs",
+      "Effect": "Allow",
+      "Action": [
+        "logs:CreateLogGroup",
+        "logs:CreateLogStream",
+        "logs:PutLogEvents"
+      ],
+      "Resource": "arn:aws:logs:us-east-1:YOUR_ACCOUNT_ID:log-group:/aws/lambda/hirobot*"
+    }
+  ]
+}
