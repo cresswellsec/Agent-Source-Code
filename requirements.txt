@@ -1,0 +1,4 @@
+# Local development dependencies only.
+# Lambda runtime already includes boto3 — this is so your IDE resolves it.
+boto3
+pytest

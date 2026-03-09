@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Lambda build artifacts
+*.zip
+
+# AWS credentials / config — never commit these
+.env
+.env.*
+*.pem
+credentials
+
+# macOS
+.DS_Store
+
+# IDE
+.idea/
+*.code-workspace
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/

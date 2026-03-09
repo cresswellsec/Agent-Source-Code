@@ -123,6 +123,63 @@ You should see a reply within a few seconds.
 
 ---
 
+## Step 8: Wire Up Auto-Deploy (optional)
+
+The GitHub Actions workflow in `.github/workflows/deploy-hirobot.yml` automatically
+zips and redeploys the Lambda whenever you push changes to `lambdas/hirobot/` on `main`.
+
+It uses OIDC (no long-lived AWS credentials stored in GitHub):
+
+### 1. Create an OIDC identity provider in AWS
+
+AWS Console → IAM → Identity providers → Add provider
+- Provider type: **OpenID Connect**
+- Provider URL: `https://token.actions.githubusercontent.com`
+- Audience: `sts.amazonaws.com`
+
+### 2. Create a deploy role
+
+```bash
+aws iam create-role \
+  --role-name hirobot-github-deploy-role \
+  --assume-role-policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Principal": {"Federated": "arn:aws:iam::YOUR_ACCOUNT_ID:oidc-provider/token.actions.githubusercontent.com"},
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {"token.actions.githubusercontent.com:aud": "sts.amazonaws.com"},
+        "StringLike": {"token.actions.githubusercontent.com:sub": "repo:cresswellsec/Agent-Source-Code:*"}
+      }
+    }]
+  }'
+
+aws iam put-role-policy \
+  --role-name hirobot-github-deploy-role \
+  --policy-name deploy-lambda \
+  --policy-document '{
+    "Version": "2012-10-17",
+    "Statement": [{
+      "Effect": "Allow",
+      "Action": ["lambda:UpdateFunctionCode", "lambda:GetFunction"],
+      "Resource": "arn:aws:lambda:us-east-1:YOUR_ACCOUNT_ID:function:hirobot"
+    }]
+  }'
+```
+
+### 3. Add the role ARN as a GitHub secret
+
+`Agent-Source-Code` repo → Settings → Secrets and variables → Actions → New repository secret
+
+| Name                  | Value                                                                  |
+|-----------------------|------------------------------------------------------------------------|
+| `AWS_DEPLOY_ROLE_ARN` | `arn:aws:iam::YOUR_ACCOUNT_ID:role/hirobot-github-deploy-role`         |
+
+After this, every push to `main` that touches `lambdas/hirobot/` triggers an automatic deploy.
+
+---
+
 ## Resource names
 
 | Resource              | Name / ARN                                      |

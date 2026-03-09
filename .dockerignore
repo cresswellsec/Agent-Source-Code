@@ -1,0 +1,31 @@
+# Git
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.coverage
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Lambda build artifacts (not needed in Docker context)
+*.zip
+
+# Secrets / local config — never bake into image
+.env
+.env.*
+*.pem
+credentials
+
+# Docs and CI (not needed at runtime)
+docs/
+.github/
+
+# macOS
+.DS_Store
