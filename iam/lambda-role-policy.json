@@ -8,18 +8,12 @@
       "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0"
     },
     {
-      "Sid": "BedrockConverse",
-      "Effect": "Allow",
-      "Action": "bedrock:Converse",
-      "Resource": "arn:aws:bedrock:us-east-1::foundation-model/amazon.nova-micro-v1:0"
-    },
-    {
       "Sid": "SecretsManagerGetSecrets",
       "Effect": "Allow",
       "Action": "secretsmanager:GetSecretValue",
       "Resource": [
-        "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:hirobot/github-token*",
-        "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:hirobot/github-webhook-secret*"
+        "arn:aws:secretsmanager:us-east-1:123456789012:secret:hirobot/github-token*",
+        "arn:aws:secretsmanager:us-east-1:123456789012:secret:hirobot/github-webhook-secret*"
       ]
     },
     {
@@ -30,7 +24,7 @@
         "logs:CreateLogStream",
         "logs:PutLogEvents"
       ],
-      "Resource": "arn:aws:logs:us-east-1:YOUR_ACCOUNT_ID:log-group:/aws/lambda/hirobot*"
+      "Resource": "arn:aws:logs:us-east-1:123456789012:log-group:/aws/lambda/hirobot*"
     }
   ]
 }

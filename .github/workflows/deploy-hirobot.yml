@@ -25,7 +25,7 @@ jobs:
       - name: Package and deploy Lambda
         run: |
           cd lambdas/hirobot
-          zip hirobot.zip hirobot.py
+          zip hirobot.zip lambda_function.py
           aws lambda update-function-code \
             --function-name hirobot \
             --zip-file fileb://hirobot.zip \

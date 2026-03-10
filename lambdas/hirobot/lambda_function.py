@@ -4,6 +4,7 @@ import hashlib
 import boto3
 import urllib.request
 import os
+import base64
 
 
 def get_secret(secret_name):
@@ -43,23 +44,37 @@ def call_bedrock(prompt: str) -> str:
     return response["output"]["message"]["content"][0]["text"]
 
 
-def handler(event, _context):
-    # 1. Validate GitHub webhook signature
+def lambda_handler(event, _context):
+    # 1. Get the webhook signing secret from Secrets Manager
     webhook_secret = get_secret("hirobot/github-webhook-secret")
     signature = event.get("headers", {}).get("x-hub-signature-256", "")
-    body_raw = event.get("body", "")
-    payload = body_raw.encode() if isinstance(body_raw, str) else body_raw
 
+    # 2. Handle API Gateway base64 encoding
+    # API Gateway sometimes base64-encodes the request body before passing
+    # it to Lambda. If that happens we need to decode it back to the original
+    # raw bytes — because GitHub signed the original bytes, not the encoded version.
+    # If we run HMAC on the wrong bytes, the signature will never match.
+    body_raw = event.get("body", "")
+    is_base64 = event.get("isBase64Encoded", False)
+
+    if is_base64:
+        payload = base64.b64decode(body_raw)
+        body_raw = payload.decode("utf-8")
+    else:
+        payload = body_raw.encode("utf-8") if isinstance(body_raw, str) else body_raw
+
+    # 3. Validate the signature — reject anything not from GitHub
     if not validate_signature(payload, signature, webhook_secret):
+        print(f"Signature validation failed. Received sig: {signature}")
         return {"statusCode": 401, "body": "Invalid signature"}
 
-    # 2. Parse event body
+    # 4. Parse the JSON body
     try:
         body = json.loads(body_raw)
     except (json.JSONDecodeError, TypeError):
         return {"statusCode": 400, "body": "Bad request"}
 
-    # 3. Only handle issue/PR comments, ignore everything else
+    # 5. Only handle issue/PR comments, ignore everything else silently
     if "comment" not in body:
         return {"statusCode": 200, "body": "ignored"}
 
@@ -67,17 +82,17 @@ def handler(event, _context):
     repo = body["repository"]["full_name"]
     issue_number = body["issue"]["number"]
 
-    # 4. Only respond to /hirobot
+    # 6. Only respond to /hirobot — ignore all other comments
     if comment_text.lower() != "/hirobot":
         return {"statusCode": 200, "body": "not my command"}
 
-    # 5. Call Bedrock
+    # 7. Call Bedrock to generate the response
     response_text = call_bedrock(
         "The user typed /hirobot as a slash command in a GitHub comment. "
         "Reply with just the word 'hi' and nothing else."
     )
 
-    # 6. Post the response back to GitHub
+    # 8. Post the response back to GitHub as a comment
     github_token = get_secret("hirobot/github-token")
     post_github_comment(repo, issue_number, response_text, github_token)
 

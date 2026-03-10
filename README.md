@@ -8,16 +8,18 @@ A slash command typed in a GitHub issue or PR comment triggers a Lambda via webh
 calls an AI model on AWS Bedrock, and posts the response back as a comment.
 
 ```
-cresswellsec/lab-target-project
+cresswellsec/agent-target-project
   └── issue comment: "/hirobot"
           ↓
-  GitHub webhook
+  GitHub webhook (issue_comment event)
           ↓
-  API Gateway → Lambda (hirobot)
+  API Gateway → https://<api-id>.execute-api.us-east-1.amazonaws.com/webhook
           ↓
-  AWS Bedrock (Nova Micro)
+  Lambda: hirobot (arn:aws:lambda:us-east-1:123456789012:function:hirobot)
           ↓
-  GitHub comment reply
+  AWS Bedrock — Amazon Nova Micro (amazon.nova-micro-v1:0)
+          ↓
+  GitHub comment reply posted to agent-target-project
 ```
 
 ## Repos
@@ -25,19 +27,23 @@ cresswellsec/lab-target-project
 | Repo | Purpose |
 |------|---------|
 | `Agent-Source-Code` (this repo) | Lambda code, IAM policies, CI/CD |
-| `lab-target-project` | The subject repo — where slash commands are typed |
+| `agent-target-project` | The subject repo — where slash commands are typed |
 
 ## Agents
 
 ### hirobot
 
-Responds to `/hirobot` comments in `lab-target-project` with a Bedrock-generated reply.
+Responds to `/hirobot` comments in `agent-target-project` with a Bedrock-generated reply.
 The hello-world starting point — proves the full webhook → Lambda → Bedrock → GitHub loop works.
 
-- **Lambda:** `lambdas/hirobot/hirobot.py`
-- **Model:** Amazon Nova Micro (`amazon.nova-micro-v1:0`)
-- **Auth:** IAM roles + GitHub webhook signature validation
-- **Secrets:** GitHub token and webhook secret stored in AWS Secrets Manager
+| Property      | Value                                                            |
+|---------------|------------------------------------------------------------------|
+| Lambda        | `arn:aws:lambda:us-east-1:123456789012:function:hirobot`         |
+| Handler       | `lambda_function.lambda_handler`                                 |
+| Model         | `amazon.nova-micro-v1:0` (Nova Micro)                            |
+| Webhook URL   | `https://<api-id>.execute-api.us-east-1.amazonaws.com/webhook` |
+| IAM role      | `hirobot-lambda-role`                                            |
+| PAT expiry    | June 7 2026 — renew in GitHub and update Secrets Manager         |
 
 ## Repo structure
 
@@ -45,27 +51,23 @@ The hello-world starting point — proves the full webhook → Lambda → Bedroc
 Agent-Source-Code/
 ├── lambdas/
 │   └── hirobot/
-│       ├── hirobot.py        # Lambda handler
-│       └── requirements.txt  # boto3 (Lambda runtime dep)
+│       ├── lambda_function.py    # Lambda handler (deployed)
+│       ├── hirobot.py            # Original draft — superseded by lambda_function.py
+│       └── requirements.txt      # boto3
 ├── iam/
 │   ├── lambda-role-policy.json   # Permissions: Bedrock, Secrets Manager, CloudWatch
 │   └── lambda-trust-policy.json  # Trust: lambda.amazonaws.com
 ├── docs/
-│   └── setup.md              # Step-by-step deploy guide
+│   └── setup.md                  # Full setup guide with deployed resource details
 ├── .github/
 │   └── workflows/
-│       └── deploy-hirobot.yml  # Auto-deploy on push to main
-├── requirements.txt          # Local dev deps (boto3, pytest)
-├── Dockerfile                # Reserved for containerized agents
+│       └── deploy-hirobot.yml    # Auto-deploy via OIDC (configure OIDC first)
+├── requirements.txt              # Local dev deps (boto3, pytest)
+├── Dockerfile                    # Reserved for containerized agents
 └── .gitignore / .dockerignore
 ```
 
 ## Setup
 
-See [docs/setup.md](docs/setup.md) for the full step-by-step guide covering:
-- Enabling Bedrock model access
-- Creating Secrets Manager secrets
-- IAM role creation
-- Lambda deployment
-- API Gateway + GitHub webhook configuration
-- Optional GitHub Actions auto-deploy via OIDC
+See [docs/setup.md](docs/setup.md) for the full guide including deployed resource ARNs,
+GitHub webhook config, debugging tips, and the optional OIDC auto-deploy setup.
