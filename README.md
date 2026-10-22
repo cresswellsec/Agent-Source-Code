@@ -43,7 +43,7 @@ The hello-world starting point — proves the full webhook → Lambda → Bedroc
 | Model         | `amazon.nova-micro-v1:0` (Nova Micro)                            |
 | Webhook URL   | `https://<api-id>.execute-api.us-east-1.amazonaws.com/webhook` |
 | IAM role      | `hirobot-lambda-role`                                            |
-| PAT expiry    | June 7 2026 — renew in GitHub and update Secrets Manager         |
+| Status        | Decommissioned — bot retired, API Gateway deleted                |
 
 ## Repo structure
 
